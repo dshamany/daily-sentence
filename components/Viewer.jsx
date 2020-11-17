@@ -72,7 +72,10 @@ export default function Viewer() {
                     onSwipeLeft={() => {
                         if (current < data.length - 1) setCurrent(current + 1);
                     }}
-                    onSwipeUp={() => setIsListView(true)}
+                    onSwipeUp={() => {
+                        if (data.length > 1)
+                            setIsListView(true);
+                    }}
                     onSwipeDown={() => setIsStatsView(true)}
                 >
                     <TouchableWithoutFeedback onLongPress={() => {
