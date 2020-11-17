@@ -241,33 +241,29 @@ export default function Viewer() {
     function listView() {
         return (
             <View style={styles.viewerContainer, { width: "100%", justifyContent: "center", alignItems: "center" }}>
-                <GestureRecognizer centerContent onSwipeDown={() => {
-                    setCurrent(0);
-                    setIsListView(false);
-                }}>
-                    <ScrollView centerContent width="100%" height="100%" justifyContent="center">
-                        {
-                            data.length > 1 ? data.map((item, idx) =>
-                                <TouchableOpacity key={item.id} onPress={() => {
-                                    setCurrent(idx)
-                                    setIsListView(false);
-                                }}
-                                >
-                                    {
-                                        idx > 0 &&
-                                        <Text style={{ ...styles.sentenceView, color: "#777", margin: 10, textAlign: "center", width: "100%" }}>{item.date}</Text>
-                                    }
-                                </TouchableOpacity>
-                            ) :
-                                <TouchableOpacity onPress={() => {
-                                    setIsListView(false);
-                                }}>
-                                    <Text style={styles.sentenceView}>No Items Available</Text>
-                                    <Text style={styles.charCountField}>(Touch to Go Back)</Text>
-                                </TouchableOpacity>
-                        }
-                    </ScrollView>
-                </GestureRecognizer>
+                <ScrollView centerContent width="100%" height="100%" justifyContent="center">
+                    {
+                        data.length > 1 ? data.map((item, idx) =>
+                            <TouchableOpacity key={item.id} onPress={() => {
+                                setCurrent(idx)
+                                setIsListView(false);
+                            }}
+                            >
+                                {
+                                    idx > 0 ?
+                                        <Text style={{ ...styles.sentenceView, color: "#777", margin: 10, textAlign: "center", width: "100%" }}>{item.date}</Text> :
+                                        <Text style={{ ...styles.sentenceView, color: "#fff", margin: 10, textAlign: "center", width: "100%" }}>Home</Text>
+                                }
+                            </TouchableOpacity>
+                        ) :
+                            <TouchableWithoutFeedback onPress={() => {
+                                setIsListView(false);
+                            }}>
+                                <Text style={styles.sentenceView}>No Items Available</Text>
+                                <Text style={styles.charCountField}>(Touch to Go Back)</Text>
+                            </TouchableWithoutFeedback>
+                    }
+                </ScrollView>
             </View>
         )
 
