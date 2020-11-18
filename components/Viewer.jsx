@@ -1,12 +1,19 @@
 import React, { useEffect, useState } from "react"
-import { View, Text, TextInput, StyleSheet, Keyboard, TouchableWithoutFeedback, FlatList, SafeAreaView, TouchableOpacity, ScrollView } from "react-native"
+import {
+    View,
+    Text,
+    TextInput,
+    StyleSheet,
+    Keyboard,
+    TouchableWithoutFeedback,
+    TouchableOpacity,
+    ScrollView
+} from "react-native"
 import GestureRecognizer from 'react-native-swipe-gestures'
 
 import Button from "./Button"
 
-import { emotionStates } from "../other/constants"
-
-import LocalStorage from '../other/data.json';
+import { emotionStates, newEntry } from "../other/constants"
 
 export default function Viewer() {
 
@@ -21,21 +28,75 @@ export default function Viewer() {
     const [textField, setTextField] = useState("");
     const [emotion, setEmotion] = useState(0);
 
+    const [loadedData, setLoadedData] = useState(false);
+
     const maxCharCount = 128;
 
-    const [data, setData] = useState([LocalStorage.root.data[0]]);
+    const [data, setData] = useState([newEntry]);
+
+    function readFromMongoDB() {
+        let new_data = [newEntry];
+        fetch("http://192.168.86.26:3001/api/posts")
+            .then(response => response.json())
+            .then(json => {
+                for (let e of json) {
+                    if (Number.isInteger(e.emotion)) {
+                        let post = {
+                            _id: e._id,
+                            lat: "",
+                            lon: "",
+                            sentence: e.sentence,
+                            emotion: e.emotion,
+                            createdAt: e.createdAt,
+                            updatedAt: e.updatedAt
+                        }
+                        new_data.push(post);
+                    }
+                }
+                setData(new_data);
+            });
+    }
+
+    function deletePost(id) {
+        fetch(`http://192.168.86.26:3001/api/posts/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'appliation/json',
+                'Accept': 'application/json'
+            }
+        })
+    }
+
+    useEffect(() => {
+        if (!loadedData) {
+            readFromMongoDB();
+        }
+        setLoadedData(true)
+    });
 
     function addEntry(obj) {
-        let tmp = data;
-        tmp[current] = obj;
-        tmp.unshift({ lat: "", lon: "", date: new Date().toDateString(), sentence: "Tap and Hold to Add New Entry", emotion: 0, id: 0 });
-        setData(tmp);
+        fetch(`http://192.168.86.26:3001/api/posts/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(obj)
+        })
+        setLoadedData(false);
     }
 
     function updateEntry(obj) {
-        let tmp = data;
-        tmp[current] = obj;
-        setData(tmp);
+        fetch(`http://192.168.86.26:3001/api/posts/${obj._id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(obj)
+
+        })
+        setLoadedData(false);
     }
 
     const emotionColor = (num) => {
@@ -63,7 +124,10 @@ export default function Viewer() {
                     title={current > 0 ? "\u1438" : " "}
                     titleStyle={styles.PaginationButtonText}
                     onPress={() => {
-                        if (current > 0) setCurrent(current - 1);
+                        if (current > 0) {
+                            setCurrent(current - 1);
+                            setLoadedData(false);
+                        }
                     }} />
                 <GestureRecognizer
                     onSwipeRight={() => {
@@ -73,11 +137,11 @@ export default function Viewer() {
                         if (current < data.length - 1) setCurrent(current + 1);
                     }}
                     onSwipeUp={() => {
-                        if (data.length > 1)
-                            setIsListView(true);
+                        setIsListView(true);
                     }}
-                    onSwipeDown={() => setIsStatsView(true)}
-                >
+                    onSwipeDown={() => {
+                        setIsStatsView(true);
+                    }}>
                     <TouchableWithoutFeedback onLongPress={() => {
                         setIsEditing(true);
                         if (current > 0) {
@@ -107,7 +171,10 @@ export default function Viewer() {
                     title={current < data.length - 1 ? '\u1433' : " "}
                     titleStyle={styles.PaginationButtonText}
                     onPress={() => {
-                        if (current < data.length - 1) setCurrent(current + 1);
+                        if (current < data.length - 1) {
+                            setCurrent(current + 1);
+                            setLoadedData(false);
+                        }
                     }} />
             </View>
         )
@@ -120,8 +187,7 @@ export default function Viewer() {
                 onLongPress={() => {
                     if (textField != "" || emotion > 0) {
                         let obj = {
-                            id: current == 0 ? data.length : data[current].id,
-                            date: new Date().toDateString(),
+                            _id: data[current]._id,
                             sentence: textField,
                             emotion: emotion
                         }
@@ -130,6 +196,7 @@ export default function Viewer() {
                         current == 0 && emotion > 0 && textField != "" ? addEntry(obj) : current > 0 && updateEntry(obj);
                     }
 
+                    setLoadedData(false);
                     setIsEditing(false);
                 }}>
                 <View style={styles.viewerContainer}>
@@ -178,11 +245,10 @@ export default function Viewer() {
                                 titleStyle={{ ...styles.deleteBtn, fontSize: 20 }}
                                 onPress={() => {
                                     let toDelete = current;
-                                    setCurrent(current - 1);
-                                    let tmp = data;
-                                    tmp.splice(toDelete, 1);
-                                    setData(tmp);
+                                    deletePost(data[toDelete]._id);
+                                    setLoadedData(false);
                                     setIsEditing(false);
+                                    setCurrent(current - 1);
                                 }}
                             />
                         }
@@ -244,29 +310,20 @@ export default function Viewer() {
     function listView() {
         return (
             <View style={styles.viewerContainer, { width: "100%", justifyContent: "center", alignItems: "center" }}>
-                <ScrollView centerContent width="100%" height="100%" justifyContent="center">
-                    {
-                        data.length > 1 ? data.map((item, idx) =>
-                            <TouchableOpacity key={item.id} onPress={() => {
-                                setCurrent(idx)
-                                setIsListView(false);
-                            }}
-                            >
-                                {
-                                    idx > 0 ?
-                                        <Text style={{ ...styles.sentenceView, color: "#777", margin: 10, textAlign: "center", width: "100%" }}>{item.date}</Text> :
-                                        <Text style={{ ...styles.sentenceView, color: "#fff", margin: 10, textAlign: "center", width: "100%" }}>Home</Text>
-                                }
-                            </TouchableOpacity>
-                        ) :
-                            <TouchableWithoutFeedback onPress={() => {
+                {
+                    data.map((item, idx) => {
+                        return (<TouchableOpacity
+                            onPress={() => {
+                                setCurrent(idx);
                                 setIsListView(false);
                             }}>
-                                <Text style={styles.sentenceView}>No Items Available</Text>
-                                <Text style={styles.charCountField}>(Touch to Go Back)</Text>
-                            </TouchableWithoutFeedback>
-                    }
-                </ScrollView>
+                            {idx == 0 ?
+                                <Text style={{ ...styles.sentenceView, color: "#fff" }}>Home</Text> :
+                                <Text style={{ ...styles.sentenceView, color: "#777" }}>{Date(item.createdAt).toString().substring(0, 15)}</Text>
+                            }
+                        </TouchableOpacity>)
+                    })
+                }
             </View>
         )
 
