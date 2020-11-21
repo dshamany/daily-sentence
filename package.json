@@ -21,7 +21,26 @@
     "react-native-web": "~0.13.12"
   },
   "devDependencies": {
-    "@babel/core": "~7.9.0"
+    "@babel/core": "~7.9.0",
+    "chai": "^4.2.0",
+    "mocha": "^8.2.1"
   },
-  "private": true
+  "private": true,
+  "name": "daily-sentence",
+  "version": "1.0.0",
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dshamany/daily-sentence.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dshamany/daily-sentence/issues"
+  },
+  "homepage": "https://github.com/dshamany/daily-sentence#readme",
+  "description": ""
 }

@@ -6,18 +6,10 @@ export let pushData = (data) => {
     console.log("This feature is not yet implemented.");
 }
 
-export let moveToPermanentStorage = (data) =>  {
-    console.log("This feature is not yet implemented.");
-}
+export function GET(url) {}
 
-export let readFromJSONFile = (filename) => {
-    console.log("This feature is not yet implemented.");
- }
+export function POST(url, data) {}
 
- export let writeToJSONFile = (filename) => {
-    console.log("This feature is not yet implemented.");
- }
+export function PUT(url, data) {}
 
- export let appendToJSONFile = (filename) => {
-    console.log("This feature is not yet implemented.");
- }
+export function DELETE(url) {}

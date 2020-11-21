@@ -10,6 +10,7 @@ import {
     ScrollView
 } from "react-native"
 import GestureRecognizer from 'react-native-swipe-gestures'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import Button from "./Button"
 
@@ -84,6 +85,7 @@ export default function Viewer() {
             body: JSON.stringify(obj)
         })
         setLoadedData(false);
+        AsyncStorage.setItem("DataIsLoaded", "True");
     }
 
     function updateEntry(obj) {
@@ -125,8 +127,8 @@ export default function Viewer() {
                     titleStyle={styles.PaginationButtonText}
                     onPress={() => {
                         if (current > 0) {
-                            setCurrent(current - 1);
                             setLoadedData(false);
+                            setCurrent(current - 1);
                         }
                     }} />
                 <GestureRecognizer
@@ -172,8 +174,8 @@ export default function Viewer() {
                     titleStyle={styles.PaginationButtonText}
                     onPress={() => {
                         if (current < data.length - 1) {
-                            setCurrent(current + 1);
                             setLoadedData(false);
+                            setCurrent(current + 1);
                         }
                     }} />
             </View>
